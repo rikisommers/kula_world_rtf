@@ -27,11 +27,11 @@ root.render(
             position: [ 1,1,1],
         } }
     >
-     <Environment
+     {/* <Environment
         preset='dawn'
         background
         blur={0}
-      />        
+      />         */}
       <Experience />
 
     </Canvas>
