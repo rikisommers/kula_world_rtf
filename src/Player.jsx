@@ -337,21 +337,22 @@ export default function Player({
       move()
     }
 
-    if (bodyPosition.y < -14) {
-      playFall();
-      restart();
-    }
-
-    if (bodyPosition.z > 14) {
-      playFall();
-      restart();
-    }
 
     let bodyPosition = body.current.translation();
     let cameraPosition = new THREE.Vector3();
     // const currentCameraState = cameraDirectionsFront[cameraStateIndex];
     // Update camera position based on the current camera state
 
+    if (bodyPosition.y < -14) {
+      playFall();
+      restart();
+    }
+
+    if (bodyPosition.y < -14) {
+      playFall();
+      restart();
+    }
+    
     cameraPosition.copy(bodyPosition);
     cameraPosition.x += camPosition.x;
     cameraPosition.y += camPosition.y;

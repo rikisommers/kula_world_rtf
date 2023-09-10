@@ -39,6 +39,19 @@ export default function Level({
     [0, -1, -2, "cube"],
     [0, -1, -3, "cube"],
 
+    [1, -1, -2, "cube"],
+    [2, -1, -2, "cube"],
+    [3, -1, -2, "cube"],
+    [4, -1, -2, "cube"],
+    
+  
+
+    [-1, -1, -2, "cube"],
+    [-2, -1, -2, "cube"],
+    [-3, -1, -2, "cube"],
+    [-4, -1, -2, "cube"],
+
+
     [0, -1, -4, "cube"],
     [0, -2, -4, "cube"],
     [0, -3, -4, "cube"],
@@ -91,17 +104,16 @@ export default function Level({
     const pz = parseInt(position.z);
     const py = parseInt(position.y - 1);
 
-    console.log("x", px, ex);
-
-    console.log("z", pz, ez);
-    console.log("y", py, ey);
+    // console.log("x", px, ex);
+    // console.log("z", pz, ez);
+    // console.log("y", py, ey);
+    //console.log("GDD", findMatchingDirection(gameGravityDirection));
+    //  console.log("pd",direction);
 
     const threshold = 1.4;
 
-    console.log("GDD", findMatchingDirection(gameGravityDirection));
 
     if (JSON.stringify(gd) === JSON.stringify(gravityDirectionDict.top)) {
-      //      console.log("pd",direction);
 
       if (direction === "forward") {
         if (py <= -threshold) {
