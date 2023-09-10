@@ -10,35 +10,35 @@ export default function BlockCube({
 
 
   return (
-    <RigidBody 
-    type="fixed"
-    colliders="cuboid"
-    restitution={ 1 }
-    friction={ 1  }
-    position={ [ 0, 0, 0 ] }
-    onCollisionEnter={({ manifold, target, other }) => {
-      console.log(
-        "cube",
+    // <RigidBody 
+    // type="fixed"
+    // colliders="cuboid"
+    // restitution={ 1 }
+    // friction={ 1  }
+    // position={ [ 0, 0, 0 ] }
+    // onCollisionEnter={({ manifold, target, other }) => {
+    //   console.log(
+    //     "cube",
         
-      );
+    //   );
 
-      if (other.rigidBodyObject) {
-        // console.log(
-        //   // this rigid body's Object3D
-        //   target.rigidBodyObject.name,
-        //   " collided with ",
-        //   // the other rigid body's Object3D
-        //   other.rigidBodyObject.name
-        // );
-      }
-    }}
-    >
+    //   if (other.rigidBodyObject) {
+    //     console.log(
+    //       // this rigid body's Object3D
+    //       target.rigidBodyObject.name,
+    //       " collided with ",
+    //       // the other rigid body's Object3D
+    //       other.rigidBodyObject.name
+    //     );
+    //   }
+    // }}
+    // >
         <primitive
         object={cube.scene.clone()} // Clone the scene for each instance
         scale={ 0.50 } 
         position={position} 
     />
-    </RigidBody>
+    // </RigidBody>
   );
 }
 

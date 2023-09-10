@@ -2,28 +2,26 @@ import * as THREE from "three";
 import {
   useRapier,
   RigidBody,
-  quat,
-  euler,
-  RapierRigidBody,
 } from "@react-three/rapier"; // Correct import for Quat and Euler
 import { useFrame } from "@react-three/fiber";
 import {
   useKeyboardControls,
   useGLTF,
-  PivotControls,
-  TransformControls,
-  OrbitControls,
 } from "@react-three/drei";
 import { useEffect, useRef, useState } from "react";
 import useGame from "./stores/useGame.jsx";
-import { useControls } from "leva";
-import { degToRad } from "three/src/math/MathUtils.js";
-import { gsap } from "gsap";
 import { playFall, playLand, playStart } from "./Audio.jsx";
+import {
+  gravityDirectionDict,
+} from "./stores/useGame.jsx";
 
-export default function Player({onPlayerPositionChange,onPlayerDirectionChange}) {
-
+export default function Player({
+  onPlayerPositionChange,
+  onPlayerDirectionChange,
+  onCameraDirectionChange,
+}) {
   const ball = useGLTF("./ball1.glb");
+
   const MovementState = {
     IDLE: "idle",
     FORWARD: "forward",
@@ -31,6 +29,82 @@ export default function Player({onPlayerPositionChange,onPlayerDirectionChange})
     MOVE_LEFT: "move_left",
     MOVE_RIGHT: "move_right",
   };
+
+  const cameraDirectionsTop = [
+    { x: 0, y: 1, z: 3 }, // Forward
+    { x: 3, y: 1, z: 0 }, // Move Left
+    { x: 0, y: 1, z: -3 }, // Backward
+    { x: -3, y: 1, z: 0 }, // Move Right
+  ];
+
+  const cameraDirectionsFront = [
+     { x: 0, y: 3, z: 0 }, // Forward
+     { x: 0, y: 0, z: 3 }, // Move Left
+     { x: 0, y: -3, z: 0 }, // Backward
+     { x: 0, y: 1, z: -3 }, // Move Right
+  ];
+  const cameraDirectionsLeft = [
+    { x: 0, y: 1, z: 3 }, // Forward
+    { x: 3, y: 1, z: 0 }, // Move Left
+    { x: 0, y: 1, z: -3 }, // Backward
+    { x: -3, y: 1, z: 0 }, // Move Right
+    // { x: 0, y: 3, z: 0 }, // Forward
+    // { x: 0, y: 0, z: 3 }, // Move Left
+    // { x: 0, y: -3, z: -3 }, // Backward
+    // { x: 0, y: 0, z: 3 }, // Move Right
+ ];
+ const cameraDirectionsRight = [
+  { x: 0, y: 3, z: 0 }, // Forward
+  { x: 0, y: 0, z: 3 }, // Move Left
+  { x: 0, y: -3, z: -3 }, // Backward
+  { x: 0, y: 0, z: 3 }, // Move Right
+];
+
+  const dist = 5;
+  const playerMovementTop = [
+    { x: 0, y: 0, z: -dist },
+    { x: -dist, y: 0, z: 0 },
+    { x: 0, y: 0, z: dist },
+    { x: dist, y: 0, z: 0 },
+  ];
+
+  const playerMovementBottom = [
+    { x: 0, y: 0, z: dist },
+    { x: dist, y: 0, z: 0 },
+    { x: 0, y: 0, z: -dist },
+    { x: -dist, y: 0, z: 0 },
+  ];
+
+  const playerMovementFront = [
+    { x: 0, y: -dist, z: 0 },
+    { x: -dist, y: 0, z: 0 },
+    { x: 0, y: dist, z: 0 },
+    { x: dist, y: 0, z: 0 },
+  ];
+
+  const playerMovementBack = [
+    { x: 0, y: dist, z: 0 },
+    { x: -dist, y: 0, z: 0 },
+    { x: 0, y: -dist, z: 0 },
+    { x: dist, y: 0, z: 0 },
+  ];
+
+  const playerMovementLeft = [
+    { x: 0, y: 0, z: -dist },
+    { x: 0, y: 0, z: 0 },
+    { x: 0, y: 0, z: dist },
+    { x: -dist, y: 0, z: 0 },
+  ];
+
+  const playerMovementRight = [
+    { x: 0, y: 0, z: -dist },
+    { x: 0, y: 0, z: 0 },
+    { x: 0, y: 0, z: dist },
+    { x: dist, y: 0, z: 0 },
+  ];
+
+
+
 
   const start = useGame((state) => state.start);
   const end = useGame((state) => state.end);
@@ -43,55 +117,66 @@ export default function Player({onPlayerPositionChange,onPlayerDirectionChange})
   const body = useRef();
   const player = useRef();
 
+
+
   const [movementState, setMovementState] = useState(MovementState.IDLE);
   const [camPosition, setCamPosition] = useState(new THREE.Vector3(10, 10, 10));
-
-
-  //const body = useRef<RapierRigidBody>(null);
-  // const positionArray = rigidBody.current.position;
-  // const positionVec3 = new Vector3(positionArray[0], positionArray[1], positionArray[2]);
-
-  // const positionArray = world.positions.getTranslation(handle); // Returns an array [x, y, z]
-  // const positionVec3 = new Vector3(positionArray[0], positionArray[1], positionArray[2]);
-
-  // Define movement states
-
-
-
- 
-
-
-  // Define an array of camera positions for different states
-  const cameraStates = [
-    { x: 0, y: 1, z: 3 }, // Forward
-    { x: 3, y: 1, z: 0 }, // Move Left
-    { x: 0, y: 1, z: -3 }, // Backward
-    { x: -3, y: 1, z: 0 }, // Move Right
-  ];
-
-
-
-
-
-  // Maintain a variable to keep track of the current camera state index
   const [cameraStateIndex, setCameraStateIndex] = useState(0);
+  const cameraDirection = useGame((state) => state.cameraDirection);
+  const gravityDirection = useGame((state) => state.gravityDirection);
+  const [gd, setGd] = useState(gravityDirection);
 
+
+
+  // move to state
   useEffect(() => {
-    if(cameraStateIndex === 0){
-     onPlayerDirectionChange('world forward')
-    }else if(cameraStateIndex === 1){
-     onPlayerDirectionChange('world left')
- 
-    }else if(cameraStateIndex === 2){
-     onPlayerDirectionChange('world back')
- 
-    }else if(cameraStateIndex === 3){
-     onPlayerDirectionChange('world right')
+    if (cameraStateIndex === 0) {
+      onPlayerDirectionChange("forward");
+      console.log("forward");
+    } else if (cameraStateIndex === 1) {
+      onPlayerDirectionChange("left");
+      console.log("left");
+    } else if (cameraStateIndex === 2) {
+      onPlayerDirectionChange("back");
+      console.log("back");
+    } else if (cameraStateIndex === 3) {
+      onPlayerDirectionChange("right");
+      console.log("right");
     }
-   }, [cameraStateIndex]);
- 
- 
-   
+    // console.log(cameraStateIndex)
+    // console.log('CD',cameraDirection)
+  }, [cameraStateIndex]);
+
+
+
+   useEffect(() => {
+
+      setGd(gravityDirection)
+      
+      if (JSON.stringify(gravityDirection) === JSON.stringify(gravityDirectionDict.top)) {
+        console.log("C-Top");
+        setCamPosition(cameraDirectionsTop[cameraStateIndex])
+      } 
+
+      if (JSON.stringify(gd) === JSON.stringify(gravityDirectionDict.front)) {
+      console.log("C-Front");
+        setCamPosition(cameraDirectionsFront[cameraStateIndex])
+      } 
+
+      if (JSON.stringify(gd) === JSON.stringify(gravityDirectionDict.left)) {
+        console.log("C-Left");
+        setCamPosition(cameraDirectionsLeft[cameraStateIndex])
+      } 
+
+
+      if (JSON.stringify(gd) === JSON.stringify(gravityDirectionDict.right)) {
+        console.log("C-Right");
+        setCamPosition(cameraDirectionsRight[cameraStateIndex])
+      } 
+
+   }, [gravityDirection,cameraStateIndex]);
+
+
   const jump = () => {
     //console.log('Yes, jump!')
     const origin = body.current.translation();
@@ -107,72 +192,58 @@ export default function Player({onPlayerPositionChange,onPlayerDirectionChange})
     // body.current.setLinvel({ x: 0, y: 0.5, z: 1 })
   };
 
-  // const rotationInRadians = (playerRotation + 90) * (Math.PI / 180);
+  const setPlayerMove = (velocity) => {
+    body.current.setLinvel(velocity);
+  };
 
-  //let direction = new THREE.Vector3([])
+  // const setCameraMove = (direction) => {
+  //   state.camera.position.copy(camPosition);
+  // };
 
   const move = () => {
-    //console.log('going forward!');
 
-    const dist = 5;
+    if (JSON.stringify(gd) === JSON.stringify(gravityDirectionDict.top)) {
+      console.log("M-Top",cameraStateIndex);
+      setPlayerMove(playerMovementTop[cameraStateIndex]);
 
+    } 
+    
+    if (JSON.stringify(gravityDirection) === JSON.stringify(gravityDirectionDict.bottom)) {
+      console.log("M-Bottom");
+      setPlayerMove(playerMovementBottom[cameraStateIndex]);
 
-    // { x: 0, y: 1, z: 3 }, // Forward
-    // { x: 3, y: 1, z: 0 }, // Move Left
-    // { x: 0, y: 1, z: -3 }, // Backward
-    // { x: -3, y: 1, z: 0 }, // Move Right
-
-    if (cameraStateIndex === 0) {
-      body.current.setLinvel({ x: 0, y: 0, z: -dist });
-
-    } else if (cameraStateIndex === 1) {
-      body.current.setLinvel({ x: -dist, y: 0, z: 0 });
-
-    } else if (cameraStateIndex === 2) {
-      body.current.setLinvel({ x: 0, y: 0, z: dist });
-
-    } else if (cameraStateIndex === 3) {
-      body.current.setLinvel({ x: dist, y: 0, z: 0 });
     }
+    
+    if (JSON.stringify(gravityDirection) === JSON.stringify(gravityDirectionDict.left)) {
+      setPlayerMove(playerMovementLeft[cameraStateIndex]);
 
+    }
+    
+     if (JSON.stringify(gravityDirection) === JSON.stringify(gravityDirectionDict.right)) {
+      console.log("M-Right");
+      setPlayerMove(playerMovementRight[cameraStateIndex]);
 
+    } 
+    
+    if (JSON.stringify(gd) === JSON.stringify(gravityDirectionDict.front)) {
+      console.log("M-Front");
+      setPlayerMove(playerMovementFront[cameraStateIndex]);
 
-    // console.log('Ball Pos', player.current.position)
-    // console.log('Ball Pos', player.current.translation)
-    // console.log('Rigid Body Position (Vector3):', positionVec3);
-
-    // if (body.current) {
-    //   // Access methods or properties on body.current here
-    //   const playerPositionWorld = body.current.translation();
-    //   console.log("Player Position (World):", playerPositionWorld);
-    // } else {
-    //   console.warn("body.current is not yet defined.");
-    // }
-
-    const playerPosition = new THREE.Vector3();
-    if (body.current) {
-        const playerPositionWorld = playerPosition.copy(body.current.translation());
-        onPlayerPositionChange(playerPosition);
+    } 
+    
+    if (JSON.stringify(gd) === JSON.stringify(gravityDirectionDict.back)) {
+      setPlayerMove(playerMovementBack[cameraStateIndex]);
     }
   };
 
-  const moveBack = () => {
-    //console.log("going back!");
-    const origin = body.current.translation();
-  };
 
-  const turnLeft = () => {
-   // console.log("going left!");
-  };
 
-  const turnRight = () => {
-   // console.log("going right!");
-  };
 
   const reset = () => {
-    body.current.setTranslation({ x: 0, y: 1, z: 0 });
-    body.current.setLinvel({ x: 0, y: 0, z: 0 });
-    body.current.setAngvel({ x: 0, y: 0, z: 0 });
+    // body.current.setTranslation({ x: 0, y: 1, z: 0 });
+    // body.current.setLinvel({ x: 0, y: 0, z: 0 });
+    // body.current.setAngvel({ x: 0, y: 0, z: 0 });
+    console.log('reset')
   };
 
   useEffect(() => {
@@ -192,18 +263,16 @@ export default function Player({onPlayerPositionChange,onPlayerDirectionChange})
       (value) => {
         if (value) {
           setMovementState(MovementState.BACKWARD);
-          moveBack();
         }
       }
     );
-
 
     const unsubscribeForward = subscribeKeys(
       (state) => state.forward,
       (value) => {
         if (value) {
           setMovementState(MovementState.FORWARD);
-         // console.log("direction:", movementState);
+          // console.log("direction:", movementState);
         }
       }
     );
@@ -212,11 +281,9 @@ export default function Player({onPlayerPositionChange,onPlayerDirectionChange})
       (state) => state.leftward,
       (value) => {
         if (value) {
-          setMovementState(MovementState.MOVE_LEFT);
-          setCameraStateIndex(
-            (prevIndex) => (prevIndex + 1) % cameraStates.length
-          );
-          turnLeft();
+   
+          //setMovementState(MovementState.MOVE_LEFT);
+          setCameraStateIndex((prevIndex) => (prevIndex + 1) % 4);
         }
       }
     );
@@ -225,12 +292,8 @@ export default function Player({onPlayerPositionChange,onPlayerDirectionChange})
       (state) => state.rightward,
       (value) => {
         if (value) {
-          setMovementState(MovementState.MOVE_RIGHT);
-          setCameraStateIndex(
-            (prevIndex) =>
-              (prevIndex - 1 + cameraStates.length) % cameraStates.length
-          );
-          turnRight();
+         // setMovementState(MovementState.MOVE_RIGHT);
+          setCameraStateIndex((prevIndex) => (prevIndex - 1 + 4) % 4);
         }
       }
     );
@@ -260,64 +323,50 @@ export default function Player({onPlayerPositionChange,onPlayerDirectionChange})
   useFrame((state, delta) => {
     const { forward, backward, leftward, rightward } = getKeys();
 
+    //console.log('GG',gravityDirection)
+    const playerPosition = new THREE.Vector3();
+    if (body.current) {
+      const playerPositionWorld = playerPosition.copy(
+        body.current.translation()
+      );
+      onPlayerPositionChange(playerPosition);
+    }
+
+    
+    if (forward) {
+      move()
+    }
+
+    // if (bodyPosition.y < -14) {
+    //   playFall();
+    //   restart();
+    // }
+
     let bodyPosition = body.current.translation();
     let cameraPosition = new THREE.Vector3();
-    const currentCameraState = cameraStates[cameraStateIndex];
-
+    // const currentCameraState = cameraDirectionsFront[cameraStateIndex];
     // Update camera position based on the current camera state
+
     cameraPosition.copy(bodyPosition);
-    cameraPosition.x += currentCameraState.x;
-    cameraPosition.y += currentCameraState.y;
-    cameraPosition.z += currentCameraState.z;
+    cameraPosition.x += camPosition.x;
+    cameraPosition.y += camPosition.y;
+    cameraPosition.z += camPosition.z;
 
-    if (movementState === "idle") {
-      //    console.log('idle')
-    }
-
-    if (movementState === "move_left") {
-    }
-
-    if (movementState === "move_right") {
-    }
-
-    if (forward) {
-      move();
-      //  console.log('forward',cameraStateIndex)
-    }
-
-    if (backward) {
-      //  console.log('backward',cameraStateIndex)
-    }
-
-    if (leftward) {
-      //  console.log('left',cameraStateIndex)
-    }
-
-    if (rightward) {
-      //    console.log('right',cameraStateIndex)
-    }
-
-    if (bodyPosition.y < -4) {
-      //  console.log('AAAAHHHH!!!')
-      playFall();
-      restart();
-    }
 
     let cameraTarget = new THREE.Vector3();
     cameraTarget = bodyPosition;
-    cameraTarget.y += 0.25;
+    //cameraTarget.y += 0.25;
     smoothedCameraPosition.lerp(cameraPosition, 5 * delta);
     smoothedCameraTarget.lerp(cameraTarget, 5 * delta);
     state.camera.position.copy(smoothedCameraPosition);
     state.camera.lookAt(smoothedCameraTarget);
 
-    // body.current.applyTorqueImpulse(torque)
   });
 
   return (
     <RigidBody
       ref={body}
-      position={[0, 1, 0]}
+      position={[0, 0, 0]}
       canSleep={false}
       colliders="ball"
       enabledRotations={[true, true, true]}
@@ -326,38 +375,12 @@ export default function Player({onPlayerPositionChange,onPlayerDirectionChange})
       friction={10}
       linearDamping={10.5}
       angularDamping={0.5}
-      onCollisionEnter={({ manifold, target, other }) => {
-        // console.log(
-        //   "Collision at world position ",
-        //   manifold.solverContactPoint(0)
-        // );
 
-        if (other.rigidBodyObject) {
-          //   console.log(
-          //     // this rigid body's Object3D
-          //     " collided with ",
-          //     // the other rigid body's Object3D
-          //     other.rigidBodyObject.name
-          //   );
-        }
-      }}
-      onCollisionExit={(payload) => {
-        /* ... */
-        console.log("exit");
-      }}
     >
-      {/* <primitive
-        castShadow
-        ref={player}
-        object={ball.scene.clone()}
-        scale={[0.26, 0.26, 0.26]}
-      /> */}
-
       <mesh castShadow ref={player} scale={player.scale}>
-                    <icosahedronGeometry args={[0.3, 1]} />
-                    <meshStandardMaterial flatShading color="mediumpurple" />
-                </mesh>
-             
+        <icosahedronGeometry args={[0.3, 1]} />
+        <meshStandardMaterial flatShading color="mediumpurple" />
+      </mesh>
     </RigidBody>
   );
 }

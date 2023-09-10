@@ -49,6 +49,12 @@ export default function Block({
     geometry={boxGeometry}
     material={obstacleMaterial}
     />
+  }    else if (blockType === 'grav') {
+    primitive = <BlockStart
+    position={position}
+    geometry={boxGeometry}
+    material={obstacleMaterial}
+    />
   }
   
 

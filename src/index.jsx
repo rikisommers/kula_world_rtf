@@ -7,6 +7,7 @@ import Interface from './Interface.jsx'
 
 const root = ReactDOM.createRoot(document.querySelector('#root'))
 
+
 root.render(
     <KeyboardControls 
     map={ [
@@ -20,18 +21,19 @@ root.render(
     <Canvas
         shadows
         camera={ {
-            fov: 45,
-            near: 0.1,
+            fov: 70,
+            near: 1,
             far: 200,
-            position: [ 1,1,1]
+            position: [ 1,1,1],
         } }
     >
-     {/* <Environment
+     <Environment
         preset='dawn'
         background
         blur={0}
-      />         */}
+      />        
       <Experience />
+
     </Canvas>
     <Interface />
 
